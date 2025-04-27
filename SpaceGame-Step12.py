@@ -82,14 +82,16 @@ def setup_game():
     scoreTurtle.hideturtle()
     scoreTurtle.penup()
     scoreTurtle.pencolor("yellow")
-    scoreTurtle.goto(375, 250)
+    screen_width = win.window_width()
+    screen_height = win.window_height()
+    scoreTurtle.goto(screen_width // 2 - 150, screen_height // 2 - 50)
     scoreTurtle.write(f"Score: {points}", align="right", font=("Arial", 25, "bold"))
 
     livesTurtle = turtle.Turtle()
     livesTurtle.hideturtle()
     livesTurtle.penup()
     livesTurtle.pencolor("red")
-    livesTurtle.goto(-375, 250)
+    livesTurtle.goto(-screen_width // 2 + 150, screen_height // 2 - 50)
     livesTurtle.write(f"Lives: {lives}", align="left", font=("Arial", 25, "bold"))
 
     stealthEnemy = turtle.Turtle()
