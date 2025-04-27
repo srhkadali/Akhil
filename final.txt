@@ -1,0 +1,216 @@
+import turtle
+import time
+import random
+import sys
+import os
+from playsound import playsound
+
+# --- Game Settings ---
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
+SHIP_MOVE_SPEED = 5
+BULLET_SPEED = 25
+ENEMY_SPEED = 3
+STEALTH_SPEED = 5
+BOSS_SPEED = 1.5
+COLLISION_DISTANCE = 35
+
+# --- Base Class for All Moving Objects ---
+class SpaceObject(turtle.Turtle):
+    def __init__(self, shape, start_x, start_y):
+        super().__init__(shape=shape)
+        self.penup()
+        self.goto(start_x, start_y)
+
+# --- Main Game Class ---
+class Game:
+    def __init__(self):
+        self.window = turtle.Screen()
+        self.window.title("Space Blaster")
+        self.window.setup(width=1.0, height=1.0)
+        self.window.bgpic("space-bg.gif")
+        self.window.tracer(0)  # turn off auto screen updates
+
+        # Load all the sprites we'll use
+        shapes = ["ship.gif", "bullet.gif", "enemy.gif", "explosion.gif", "stealth.gif", "boss.gif"]
+        for shape in shapes:
+            turtle.register_shape(shape)
+
+        # Set up the player ship and the bullet
+        self.ship = SpaceObject("ship.gif", 0, -250)
+        self.bullet = SpaceObject("bullet.gif", 0, -300)
+        self.bullet.hideturtle()
+
+        # Create a few enemies to start with
+        self.enemies = [SpaceObject("enemy.gif", random.randint(-350, 350), 400 + i * 150) for i in range(5)]
+
+        # Prepare the special stealth enemy and the boss
+        self.stealth_enemy = SpaceObject("stealth.gif", random.randint(-300, 300), 800)
+        self.stealth_enemy.hideturtle()
+
+        self.boss_enemy = SpaceObject("boss.gif", random.randint(-300, 300), 1000)
+        self.boss_enemy.hideturtle()
+
+        # Game stats
+        self.move_direction = 0
+        self.points = 0
+        self.lives = 3
+        self.boss_health = 2
+
+        # HUD (Heads Up Display)
+        self.score_display = turtle.Turtle()
+        self.setup_score_display()
+
+        self.lives_display = turtle.Turtle()
+        self.setup_lives_display()
+
+        # Set up keyboard controls
+        self.setup_controls()
+
+    def setup_controls(self):
+        self.window.listen()
+        self.window.onkey(self.move_left, "Left")
+        self.window.onkey(self.move_right, "Right")
+        self.window.onkey(self.fire_bullet, "space")
+
+    def move_left(self):
+        self.move_direction = -SHIP_MOVE_SPEED
+
+    def move_right(self):
+        self.move_direction = SHIP_MOVE_SPEED
+
+    def fire_bullet(self):
+        if not self.bullet.isvisible():
+            self.bullet.goto(self.ship.xcor(), self.ship.ycor() + 20)
+            self.bullet.showturtle()
+            playsound("laser.wav", False)
+
+    def setup_score_display(self):
+        self.score_display.hideturtle()
+        self.score_display.penup()
+        self.score_display.color("yellow")
+        self.update_score()
+
+    def setup_lives_display(self):
+        self.lives_display.hideturtle()
+        self.lives_display.penup()
+        self.lives_display.color("red")
+        self.update_lives()
+
+    def update_score(self):
+        self.score_display.clear()
+        self.score_display.goto(350, 250)
+        self.score_display.write(f"Score: {self.points}", align="right", font=("Arial", 20, "bold"))
+
+    def update_lives(self):
+        self.lives_display.clear()
+        self.lives_display.goto(-350, 250)
+        self.lives_display.write(f"Lives: {self.lives}", align="left", font=("Arial", 20, "bold"))
+
+    def check_collision(self, obj1, obj2):
+        return obj1.distance(obj2) < COLLISION_DISTANCE
+
+    def main_loop(self):
+        while self.lives > 0 and (self.enemies or self.stealth_enemy.isvisible() or self.boss_enemy.isvisible()):
+            # Move the ship left or right
+            self.ship.forward(self.move_direction)
+
+            # Move the bullet upward if it's active
+            if self.bullet.isvisible():
+                self.bullet.setheading(90)
+                self.bullet.forward(BULLET_SPEED)
+                if self.bullet.ycor() > SCREEN_HEIGHT / 2:
+                    self.bullet.hideturtle()
+
+            # Move the enemies down the screen
+            for enemy in self.enemies:
+                if enemy.isvisible():
+                    enemy.setheading(270)
+                    enemy.forward(ENEMY_SPEED)
+
+                    # Check for bullet hit
+                    if self.check_collision(self.bullet, enemy):
+                        enemy.shape("explosion.gif")
+                        playsound("explosion.wav", False)
+                        self.bullet.hideturtle()
+                        self.points += 1000
+                        self.update_score()
+                        enemy.hideturtle()
+
+                    # If enemy passes bottom, player loses a life
+                    if enemy.ycor() < -300:
+                        enemy.hideturtle()
+                        self.lives -= 1
+                        self.update_lives()
+
+            # Handle stealth enemy behavior
+            if self.stealth_enemy.isvisible():
+                self.stealth_enemy.setheading(270)
+                self.stealth_enemy.forward(STEALTH_SPEED)
+
+                if self.check_collision(self.bullet, self.stealth_enemy):
+                    self.stealth_enemy.shape("explosion.gif")
+                    playsound("explosion.wav", False)
+                    self.bullet.hideturtle()
+                    self.points += 3000
+                    self.update_score()
+                    self.stealth_enemy.hideturtle()
+
+            else:
+                # Randomly spawn a stealth enemy
+                if random.randint(1, 100) == 1:
+                    self.stealth_enemy.shape("stealth.gif")
+                    self.stealth_enemy.goto(random.randint(-300, 300), 800)
+                    self.stealth_enemy.showturtle()
+
+            # Handle boss enemy behavior
+            if self.boss_enemy.isvisible():
+                self.boss_enemy.setheading(270)
+                self.boss_enemy.forward(BOSS_SPEED)
+
+                if self.check_collision(self.bullet, self.boss_enemy):
+                    self.boss_health -= 1
+                    self.bullet.hideturtle()
+                    playsound("explosion.wav", False)
+
+                    if self.boss_health <= 0:
+                        self.boss_enemy.shape("explosion.gif")
+                        self.points += 3500
+                        self.update_score()
+                        self.boss_enemy.hideturtle()
+
+            else:
+                # Randomly spawn a boss enemy
+                if random.randint(1, 200) == 1:
+                    self.boss_enemy.shape("boss.gif")
+                    self.boss_enemy.goto(random.randint(-300, 300), 1000)
+                    self.boss_enemy.showturtle()
+                    self.boss_health = 2
+
+            # Update the screen and take a little break
+            self.window.update()
+            time.sleep(0.02)
+
+        # If the player loses all lives or wins, show game over
+        self.game_over()
+
+    def game_over(self):
+        self.score_display.goto(0, 0)
+        self.score_display.color("white")
+        message = "YOU LOST ALL LIVES!" if self.lives <= 0 else "GAME OVER!"
+        self.score_display.write(message, align="center", font=("Arial", 30, "bold"))
+        time.sleep(2)
+        self.ask_restart()
+
+    def ask_restart(self):
+        answer = turtle.textinput("Game Over", "Play Again? (y/n)")
+        if answer and answer.lower() == "y":
+            self.window.bye()
+            os.execl(sys.executable, sys.executable, *sys.argv)
+        else:
+            self.window.bye()
+
+# --- Start the game ---
+if __name__ == "__main__":
+    game = Game()
+    game.main_loop()
