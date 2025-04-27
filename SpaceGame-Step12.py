@@ -47,7 +47,7 @@ def setup_game():
 
     win = turtle.Screen()
     win.title("SPACE BLASTER")
-    win.setup(800, 600)
+    win.setup(width=1.0, height=1.0)
     win.bgpic("space-bg.gif")
     win.tracer(0)
 
