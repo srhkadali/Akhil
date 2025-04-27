@@ -5,6 +5,9 @@ import sys
 import os
 from playsound import playsound
 
+
+
+#Arrow key commands
 def left():
     global moveShipBy
     moveShipBy = -5
@@ -21,6 +24,14 @@ def space():
         bullet.showturtle()
         playsound("laser.wav", False)
 
+turtle.listen()
+turtle.onkey(left, "Left")
+turtle.onkey(right, "Right")
+turtle.onkey(space, "space")
+    
+
+
+#Enemies set up
 def getEnemies():
     enemies = []
     for x in range(1, 6):
@@ -39,19 +50,25 @@ def pixelsBetween(value1, value2):
 def getExplosionCounterList(enemyCount):
     return [0 for _ in range(enemyCount)]
 
+
+#ThE Game set up
 def setup_game():
     global win, spaceship, bullet, enemies, explosionCounters
     global moveShipBy, points, lives, enemiesRemaining
     global scoreTurtle, livesTurtle, stealthEnemy, stealthCounter, stealthVisible
     global bossEnemy, bossHealth, bossCounter, bossVisible
-
+    
+    
+    
+    #Screen set up
     win = turtle.Screen()
     win.title("SPACE BLASTER")
     win.setup(width=1.0, height=1.0)
     win.bgpic("space-bg.gif")
     win.tracer(0)
 
-    # Register shapes
+
+    # Sprites set up
     turtle.register_shape("ship.gif")
     turtle.register_shape("bullet.gif")
     turtle.register_shape("enemy.gif")
@@ -70,6 +87,9 @@ def setup_game():
     bullet.shape("bullet.gif")
     bullet.penup()
 
+
+
+    #Enemies set up
     enemies = getEnemies()
     explosionCounters = getExplosionCounterList(len(enemies))
 
@@ -77,23 +97,7 @@ def setup_game():
     points = 0
     lives = 3
     enemiesRemaining = len(enemies)
-
-    scoreTurtle = turtle.Turtle()
-    scoreTurtle.hideturtle()
-    scoreTurtle.penup()
-    scoreTurtle.pencolor("yellow")
-    screen_width = win.window_width()
-    screen_height = win.window_height()
-    scoreTurtle.goto(screen_width // 2 - 150, screen_height // 2 - 50)
-    scoreTurtle.write(f"Score: {points}", align="right", font=("Arial", 25, "bold"))
-
-    livesTurtle = turtle.Turtle()
-    livesTurtle.hideturtle()
-    livesTurtle.penup()
-    livesTurtle.pencolor("red")
-    livesTurtle.goto(-screen_width // 2 + 150, screen_height // 2 - 50)
-    livesTurtle.write(f"Lives: {lives}", align="left", font=("Arial", 25, "bold"))
-
+    
     stealthEnemy = turtle.Turtle()
     stealthEnemy.hideturtle()
     stealthEnemy.shape("stealth.gif")
@@ -111,10 +115,28 @@ def setup_game():
     bossCounter = 0
     bossVisible = True
 
-    turtle.listen()
-    turtle.onkey(left, "Left")
-    turtle.onkey(right, "Right")
-    turtle.onkey(space, "space")
+
+    
+    #Score set up
+    scoreTurtle = turtle.Turtle()
+    scoreTurtle.hideturtle()
+    scoreTurtle.penup()
+    scoreTurtle.pencolor("yellow")
+    screen_width = win.window_width()
+    screen_height = win.window_height()
+    scoreTurtle.goto(screen_width // 2 - 150, screen_height // 2 - 50)
+    scoreTurtle.write(f"Score: {points}", align="right", font=("Arial", 25, "bold"))
+
+
+    #Lives set up
+    livesTurtle = turtle.Turtle()
+    livesTurtle.hideturtle()
+    livesTurtle.penup()
+    livesTurtle.pencolor("red")
+    livesTurtle.goto(-screen_width // 2 + 150, screen_height // 2 - 50)
+    livesTurtle.write(f"Lives: {lives}", align="left", font=("Arial", 25, "bold"))
+
+
 
 def main_game():
     global moveShipBy, points, lives, enemiesRemaining
@@ -133,9 +155,14 @@ def main_game():
         if spaceship.xcor() > 325 or spaceship.xcor() < -325:
             moveShipBy = 0
 
+        
+#ENEMIES:
         enemyIndex = 0
         enemiesRemaining = 0
         for enemy in enemies:
+            
+            
+            #Enemy 1: Code for the normal enemy (the pink ufo)
             if enemy.ycor() > -350:
                 enemy.setheading(270)
                 enemy.forward(3)
@@ -167,7 +194,10 @@ def main_game():
             if explosionCounters[enemyIndex] > 5:
                 enemy.hideturtle()
             enemyIndex += 1
-
+        
+        
+        
+        #Enemy 2: Code for the sleath ufo (the balck ufo)
         if stealthEnemy.isvisible():
             stealthEnemy.setheading(270)
             stealthEnemy.forward(5)
@@ -195,7 +225,10 @@ def main_game():
                 stealthEnemy.goto(random.randint(-300, 300), 800)
                 stealthEnemy.showturtle()
                 stealthCounter = 0
-
+        
+        
+        
+        # Enemy 3: Code for the bose (the yellow ufo)
         if bossEnemy.isvisible():
             bossEnemy.setheading(270)
             bossEnemy.forward(1.5)
@@ -231,6 +264,8 @@ def main_game():
         win.update()
         time.sleep(0.02)
 
+
+#Retrying fuction
 def try_again():
     answer = turtle.textinput("Game Over", "Try again? (y/n)")
     if answer and answer.lower() == "y":
@@ -244,11 +279,15 @@ def try_again():
         time.sleep(2)
         win.bye()
 
-# --- Run the full game ---
+
+
+# STARTING THE GAME
 setup_game()
 main_game()
 
-# After game over
+
+
+# Game over message
 scoreTurtle.goto(0, 0)
 if lives <= 0:
     scoreTurtle.write("YOU LOST ALL LIVES!", align="center", font=("Arial", 50, "bold"))
