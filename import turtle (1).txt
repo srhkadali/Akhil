@@ -1,0 +1,197 @@
+import turtle
+import time
+from playsound import playsound
+import random
+
+def left():
+    global moveShipBy
+    moveShipBy = -3
+
+def right():
+    global moveShipBy
+    moveShipBy = 3
+
+def space():
+    global bullet
+    global spaceship
+
+    if bullet.isvisible() == False:
+        bullet.goto(spaceship.xcor(), spaceship.ycor() + 45)
+        bullet.showturtle()
+        playsound("laser.wav", False)
+
+def getEnemies():
+    e = None
+    enemies = []
+    for x in range(1, 6):
+        e = turtle.Turtle()
+        e.hideturtle()
+        e.shape("enemy.gif")
+        e.penup()
+        e.goto(random.randint(-350, 350), int(800 * x))
+        e.showturtle()
+        enemies.append(e)
+
+    return enemies
+
+def pixelsBetween(value1, value2):
+    return abs(value1 - value2)
+
+def getExplosionCounterList(enemyCount):
+    return [0 for _ in range(enemyCount)]
+
+win = turtle.Screen()
+win.title("SPACE BLASTER")
+win.setup(800, 600)
+win.bgpic("space-bg.gif")
+win.tracer(0)
+
+# Register shapes
+turtle.register_shape("ship.gif")
+turtle.register_shape("bullet.gif")
+turtle.register_shape("enemy.gif")
+turtle.register_shape("explosion.gif")
+turtle.register_shape("stealth.gif")  # NEW shape for stealth enemy
+
+spaceship = turtle.Turtle()
+spaceship.shape("ship.gif")
+spaceship.penup()
+spaceship.speed(0)
+spaceship.goto(0, -200)
+
+bullet = turtle.Turtle()
+bullet.hideturtle()
+bullet.shape("bullet.gif")
+bullet.penup()
+
+enemies = getEnemies()
+explosionCounters = getExplosionCounterList(len(enemies))
+
+moveShipBy = 0
+points = 0
+lives = 3
+enemiesRemaining = len(enemies)
+
+# Score display
+scoreTurtle = turtle.Turtle()
+scoreTurtle.hideturtle()
+scoreTurtle.penup()
+scoreTurtle.pencolor("yellow")
+scoreTurtle.goto(375, 250)
+scoreTurtle.write(f"Score: {points}", align="right", font=("Arial", 25, "bold"))
+
+# Lives display
+livesTurtle = turtle.Turtle()
+livesTurtle.hideturtle()
+livesTurtle.penup()
+livesTurtle.pencolor("red")
+livesTurtle.goto(-375, 250)
+livesTurtle.write(f"Lives: {lives}", align="left", font=("Arial", 25, "bold"))
+
+# Stealth Enemy
+stealthEnemy = turtle.Turtle()
+stealthEnemy.hideturtle()
+stealthEnemy.shape("stealth.gif")
+stealthEnemy.penup()
+stealthEnemy.goto(random.randint(-300, 300), 800)
+stealthCounter = 0
+stealthVisible = True
+
+# Keyboard events
+turtle.listen()
+turtle.onkey(left, "Left")
+turtle.onkey(right, "Right")
+turtle.onkey(space, "space")
+
+# Game loop
+while enemiesRemaining > 0 and lives > 0:
+    spaceship.forward(moveShipBy)
+
+    if bullet.isvisible():
+        bullet.setheading(90)
+        bullet.forward(25)
+
+    if bullet.ycor() > (win.window_height() / 2):
+        bullet.hideturtle()
+
+    if spaceship.xcor() > 325:
+        moveShipBy = 0
+    elif spaceship.xcor() < -325:
+        moveShipBy = 0
+
+    enemyIndex = 0
+    enemiesRemaining = 0
+    for enemy in enemies:
+        if enemy.ycor() > -350:
+            enemy.setheading(270)
+            enemy.forward(3)
+            enemiesRemaining += 1
+
+        if (pixelsBetween(enemy.xcor(), bullet.xcor()) < 35 and
+                pixelsBetween(enemy.ycor(), bullet.ycor()) < 35 and
+                bullet.isvisible() and enemy.isvisible()):
+            enemy.shape("explosion.gif")
+            bullet.hideturtle()
+            playsound("explosion.wav", False)
+            explosionCounters[enemyIndex] = 1
+            points += 1000
+            scoreTurtle.clear()
+            scoreTurtle.write(f"Score: {points}", align="right", font=("Arial", 25, "bold"))
+
+        if enemy.ycor() < -250 and enemy.isvisible():
+            enemy.hideturtle()
+            explosionCounters[enemyIndex] = 6
+            lives -= 1
+            livesTurtle.clear()
+            livesTurtle.write(f"Lives: {lives}", align="left", font=("Arial", 25, "bold"))
+            if lives <= 0:
+                enemiesRemaining = 0
+                break
+
+        if explosionCounters[enemyIndex] >= 1:
+            explosionCounters[enemyIndex] += 1
+
+        if explosionCounters[enemyIndex] > 5:
+            enemy.hideturtle()
+
+        enemyIndex += 1
+
+    # --- Stealth Enemy Logic ---
+    if stealthEnemy.isvisible():
+        stealthEnemy.setheading(270)
+        stealthEnemy.forward(5)
+
+        if (pixelsBetween(stealthEnemy.xcor(), bullet.xcor()) < 35 and
+            pixelsBetween(stealthEnemy.ycor(), bullet.ycor()) < 35 and
+            bullet.isvisible()):
+            stealthEnemy.shape("explosion.gif")
+            bullet.hideturtle()
+            playsound("explosion.wav", False)
+            stealthCounter = 1
+            points += 3000
+            scoreTurtle.clear()
+            scoreTurtle.write(f"Score: {points}", align="right", font=("Arial", 25, "bold"))
+
+        if stealthCounter >= 1:
+            stealthCounter += 1
+        if stealthCounter > 5:
+            stealthEnemy.hideturtle()
+            stealthVisible = False
+
+    # Occasionally respawn stealth enemy
+    if not stealthEnemy.isvisible() and stealthVisible:
+        if random.randint(1, 100) == 1:
+            stealthEnemy.shape("stealth.gif")
+            stealthEnemy.goto(random.randint(-300, 300), 800)
+            stealthEnemy.showturtle()
+            stealthCounter = 0
+
+    win.update()
+    time.sleep(0.02)
+
+# Game Over message
+scoreTurtle.goto(0, 0)
+if lives <= 0:
+    scoreTurtle.write("YOU LOST ALL LIVES!", align="center", font=("Arial", 50, "bold"))
+else:
+    scoreTurtle.write("GAME OVER", align="center", font=("Arial", 50, "bold"))
