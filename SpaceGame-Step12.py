@@ -5,23 +5,22 @@ import random
 
 def left():
     global moveShipBy
-    moveShipBy = -3
+    moveShipBy = -8  # Faster left move
 
 def right():
     global moveShipBy
-    moveShipBy = 3
+    moveShipBy = 8   # Faster right move
 
 def space():
     global bullet
     global spaceship
 
-    if bullet.isvisible() == False:
+    if not bullet.isvisible():
         bullet.goto(spaceship.xcor(), spaceship.ycor() + 45)
         bullet.showturtle()
         playsound("laser.wav", False)
 
 def getEnemies():
-    e = None
     enemies = []
     for x in range(1, 6):
         e = turtle.Turtle()
@@ -31,7 +30,6 @@ def getEnemies():
         e.goto(random.randint(-350, 350), int(800 * x))
         e.showturtle()
         enemies.append(e)
-
     return enemies
 
 def pixelsBetween(value1, value2):
@@ -40,6 +38,7 @@ def pixelsBetween(value1, value2):
 def getExplosionCounterList(enemyCount):
     return [0 for _ in range(enemyCount)]
 
+# Set up the window
 win = turtle.Screen()
 win.title("SPACE BLASTER")
 win.setup(800, 600)
@@ -51,19 +50,22 @@ turtle.register_shape("ship.gif")
 turtle.register_shape("bullet.gif")
 turtle.register_shape("enemy.gif")
 turtle.register_shape("explosion.gif")
-turtle.register_shape("stealth.gif")  # NEW shape for stealth enemy
+turtle.register_shape("stealth.gif")  # NEW stealth ship
 
+# Create spaceship
 spaceship = turtle.Turtle()
 spaceship.shape("ship.gif")
 spaceship.penup()
 spaceship.speed(0)
 spaceship.goto(0, -200)
 
+# Create bullet
 bullet = turtle.Turtle()
 bullet.hideturtle()
 bullet.shape("bullet.gif")
 bullet.penup()
 
+# Enemies and counters
 enemies = getEnemies()
 explosionCounters = getExplosionCounterList(len(enemies))
 
@@ -97,7 +99,7 @@ stealthEnemy.goto(random.randint(-300, 300), 800)
 stealthCounter = 0
 stealthVisible = True
 
-# Keyboard events
+# Keyboard bindings
 turtle.listen()
 turtle.onkey(left, "Left")
 turtle.onkey(right, "Right")
@@ -114,11 +116,15 @@ while enemiesRemaining > 0 and lives > 0:
     if bullet.ycor() > (win.window_height() / 2):
         bullet.hideturtle()
 
+    # Wall collision
     if spaceship.xcor() > 325:
+        spaceship.setx(325)
         moveShipBy = 0
     elif spaceship.xcor() < -325:
+        spaceship.setx(-325)
         moveShipBy = 0
 
+    # Move enemies
     enemyIndex = 0
     enemiesRemaining = 0
     for enemy in enemies:
@@ -150,13 +156,12 @@ while enemiesRemaining > 0 and lives > 0:
 
         if explosionCounters[enemyIndex] >= 1:
             explosionCounters[enemyIndex] += 1
-
         if explosionCounters[enemyIndex] > 5:
             enemy.hideturtle()
 
         enemyIndex += 1
 
-    # --- Stealth Enemy Logic ---
+    # Stealth Enemy Logic
     if stealthEnemy.isvisible():
         stealthEnemy.setheading(270)
         stealthEnemy.forward(5)
@@ -178,7 +183,7 @@ while enemiesRemaining > 0 and lives > 0:
             stealthEnemy.hideturtle()
             stealthVisible = False
 
-    # Occasionally respawn stealth enemy
+    # Randomly respawn stealth
     if not stealthEnemy.isvisible() and stealthVisible:
         if random.randint(1, 100) == 1:
             stealthEnemy.shape("stealth.gif")
