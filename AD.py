@@ -1,3 +1,8 @@
+#For this code I have referenced Mr.Bohn (full name Matt Bohn) Udemy class from which I have recycled code.
+#From Mr.Bohn class I have used his images and audio files.
+#I have consulted chatgpt for some parts of the code. I will adress when I have in my comments same for Mr.Bohn
+
+#imports
 import turtle
 import time
 import random
@@ -5,16 +10,15 @@ import sys
 import os
 from playsound import playsound
 
-
-
 #Arrow key commands
+
 def left():
     global moveShipBy
-    moveShipBy = -5
+    moveShipBy = -5   #when the left arrow is pressed the ship moves left 5 on the screen
 
 def right():
     global moveShipBy
-    moveShipBy = 5
+    moveShipBy = 5    #when the right arrow is pressed the ship moves righ 5 on the screen
 
 def space():
     global bullet
@@ -22,19 +26,20 @@ def space():
     if not bullet.isvisible():
         bullet.goto(spaceship.xcor(), spaceship.ycor() + 45)
         bullet.showturtle()
-        playsound("laser.wav", False)
+        playsound("laser.wav", False)  #The space key triggers the bullet to be fired and the laser sound to be played
+
 
 turtle.listen()
-turtle.onkey(left, "Left")
-turtle.onkey(right, "Right")
-turtle.onkey(space, "space")
+turtle.onkey(left, "Left")  #sets the function left to the left arrow button on the computer
+turtle.onkey(right, "Right") #sets the function right to the right arrow button on the computer
+turtle.onkey(space, "space") #sets the function space to the space button on the computer
     
 
 
-#Enemies set up
+#Enemies set up this has been taken for Mr. Bohn's class
 def getEnemies():
     enemies = []
-    for x in range(1, 6):
+    for x in range(1, 6): #This gets five enemies and places them randomly
         e = turtle.Turtle()
         e.hideturtle()
         e.shape("enemy.gif")
@@ -44,19 +49,16 @@ def getEnemies():
         enemies.append(e)
     return enemies
 
-def pixelsBetween(value1, value2):
+def pixelsBetween(value1, value2): #This checks how close two objects are to each other 
     return abs(value1 - value2)
 
-def getExplosionCounterList(enemyCount):
+def getExplosionCounterList(enemyCount): #This makes a list to track explosion timing for each enemy.
     return [0 for _ in range(enemyCount)]
 
 
 #ThE Game set up
-def setup_game():
-    global win, spaceship, bullet, enemies, explosionCounters
-    global moveShipBy, points, lives, enemiesRemaining
-    global scoreTurtle, livesTurtle, stealthEnemy, stealthCounter, stealthVisible
-    global bossEnemy, bossHealth, bossCounter, bossVisible
+def setup_game(): #
+    global win, spaceship, bullet, enemies, explosionCounters, moveShipBy, points, lives, enemiesRemaining, scoreTurtle, livesTurtle, stealthEnemy, stealthCounter, stealthVisible, bossEnemy, bossHealth, bossCounter, bossVisible
     
     
     
