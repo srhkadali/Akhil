@@ -1,5 +1,6 @@
 #For this code I have referenced Mr.Bohn (full name Matt Bohn) Udemy class from which I have recycled code.
 #I have consulted chatgpt for some parts of the code. I will adress when I have in my comments same for Mr.Bohn
+#There are other files (just gifs) that are needed for this progarm to work as intened. But from my understanding I can only send this pdf file, so I will not be sending those gif files.
 
 #imports
 import turtle
